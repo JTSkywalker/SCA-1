@@ -1,0 +1,7 @@
+CC = gcc
+CFLAGS=-std=gnu99 -O3 -march=native -Wall -m64 -g -DCLOCK=CLOCK_REALTIME
+OMPFLAGS=-fopenmp
+LDFLAGS=-g 
+LIBS=-lm -lrt
+MPICC=OMPI_CC=$(CC) mpicc
+NPROC=8
