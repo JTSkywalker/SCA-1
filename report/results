@@ -1,0 +1,20 @@
+Question 1)
+Time for problem size:
+50		100		150		200
+0.1642		3.79433		18.7618		60.147
+
+Time for Afun
+
+Time for dot products
+17%
+Question 2)
+	SSOR:
+psize	50		100		150		200
+time	0.123674	1.46592		6.99782		20.6147
+steps	23		30		41		51
+
+	AS:
+psize	50		100		150		200
+time	0.198377	2.25927		10.8934		31.9613
+steps	31		41		57		71
+
