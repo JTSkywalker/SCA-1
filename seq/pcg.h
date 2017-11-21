@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+double dot(int n, const double* x, const double* y);
+
 typedef void (*mul_fun_t)(int n, void* data, double* Ax, double* x);
 
 double pcg(int n,
