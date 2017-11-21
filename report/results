@@ -1,9 +1,8 @@
 Question 1)
 Time for problem size:
-50		100		150		200
-0.1642		3.79433		18.7618		60.147
-
-Time for Afun
+psize	50		100		150		200
+time	0.164723	4.19555		18.3592		58.7347
+Afun t	0.089972	1.482199	7.282532	23.133709
 
 Time for dot products
 17%
