@@ -8,6 +8,7 @@
 double dot(int n, const double* x, const double* y);
 
 typedef void (*mul_fun_t)(int n, void* data, double* Ax, double* x);
+double dot(int n, const double* x, const double* y);
 
 double pcg(int n,
            mul_fun_t Mfun, void* Mdata,

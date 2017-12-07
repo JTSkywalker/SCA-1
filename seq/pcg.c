@@ -6,6 +6,8 @@
 #include "timing.h"
 #include "pcg.h"
 
+#include <scorep/SCOREP_User.h>
+
 
 double dot(int n, const double* x, const double* y)
 {
@@ -74,12 +76,20 @@ double pcg(int n,
             memcpy(p, z, n*sizeof(double));
         } else {
             double beta = rho/rho_prev;
+	    SCOREP_USER_REGION_DEFINE(forP)
+	      SCOREP_USER_REGION_BEGIN(forP, "forP", SCOREP_USER_REGION_TYPE_COMMON)
             for (int i = 0; i < n; ++i) p[i] = z[i] + beta*p[i];
+	    SCOREP_USER_REGION_END(forP)
         }
         Afun(n, Adata, q, p);
         double alpha = rho/dot(n, p, q);
-        for (int i = 0; i < n; ++i) x[i] += alpha*p[i];
-        for (int i = 0; i < n; ++i) r[i] -= alpha*q[i];
+	SCOREP_USER_REGION_DEFINE(forPQ)
+	  SCOREP_USER_REGION_BEGIN(forPQ, "forPQ", SCOREP_USER_REGION_TYPE_COMMON)
+	  for (int i = 0; i < n; ++i) {
+	    x[i] += alpha*p[i];
+	    r[i] -= alpha*q[i];
+	  }
+	SCOREP_USER_REGION_END(forPQ)
         is_converged = (rho/rho0 < rtol2);
     }
 

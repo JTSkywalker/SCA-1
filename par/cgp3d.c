@@ -29,6 +29,7 @@ void mul_poisson3d(int N, void* data,
 
     int n = *(int*) data;
     int inv_h2 = (n-1)*(n-1);
+#pragma omp parallel for schedule(static)
     for (int k = 0; k < n; ++k) {
         for (int j = 0; j < n; ++j) {
             for (int i = 0; i < n; ++i) {
@@ -49,6 +50,7 @@ void mul_poisson3d(int N, void* data,
 }
 
 
+
 /*@T
  * \section{Preconditioners for the Laplacian}
  *
@@ -58,7 +60,21 @@ void mul_poisson3d(int N, void* data,
  *@c*/
 void pc_identity(int n, void* data, double* Ax, double* x)
 {
-    memcpy(Ax, x, n*sizeof(double));
+  /*#pragma omp parallel shared(Ax,x)
+  {
+    int bulk = 1000000;
+    int m = n / bulk;
+    int remainder = n % bulk;
+    
+    #pragma omp for schedule(static)
+    for (int i=0; i < m; i++) {
+      if (i == m-1)
+	memcpy(Ax+(i*bulk), x+(i*bulk), (bulk+remainder)*sizeof(double));
+      else
+	memcpy(Ax+(i*bulk), x+(i*bulk), bulk*sizeof(double));
+    }
+  }*/
+  memcpy(Ax, x, n*sizeof(double));
 }
 
 /*@T
