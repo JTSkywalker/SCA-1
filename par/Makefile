@@ -6,10 +6,10 @@ default: cgp3d.x
 # === Code
 
 cgp3d.x: cgp3d.o pcg.o params.o timing.o
-	$(CC) -o $@ $^ $(LFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(LFLAGS) $(LIBS) $(OMPFLAGS)
 
 .c.o:
-	$(CC) $(CFLAGS) $(INCLUDE) -c $<
+	$(CC) $(CFLAGS) $(OMPFLAGS) $(INCLUDE) -c $<
 
 .PHONY: clean
 clean:

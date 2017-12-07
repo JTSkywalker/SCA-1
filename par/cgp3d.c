@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "omp.h"
 #include "pcg.h"
 #include "params.h"
 
@@ -102,21 +103,43 @@ typedef struct pc_ssor_p3d_t {
 void ssor_forward_sweep(int n, int i1, int i2, int j1, int j2, int k1, int k2, 
                         double* restrict Ax, double w)
 {
+    #define min(a,b) ((a)<(b)?(a):(b))
     #define AX(i,j,k) (Ax[((k)*n+(j))*n+(i)])
-    for (int k = k1; k < k2; ++k) {
-        for (int j = j1; j < j2; ++j) {
-            for (int i = i1; i < i2; ++i) {
-                double xx = AX(i,j,k);
-                double xn = (i > 0)   ? AX(i-1,j,k) : 0;
-                double xe = (j > 0)   ? AX(i,j-1,k) : 0;
-                double xu = (k > 0)   ? AX(i,j,k-1) : 0;
-                AX(i,j,k) = (xx+xn+xe+xu)/6*w;
-            }
-        }
-    }
-    #undef AX
-}
+    #define BLOCK_SIZE 10        
+    double xx, xn, xe, xu;
+	
+    // Inter block iteraions
+    for (int d=0; d<= i2+j2+k2-3; d++) {
+	for (int ii=i1;ii< min(d,i2-1);ii++)
+	{
+	int kk=k1;
+	int jj = d-ii-kk;
+	
+		for (; jj>=j1 && kk<min(d,k2-1)-ii;jj--,kk++){
+	//	printf("ii=%d jj=%d kk=%d d=%d\n",ii,jj,kk,d); 
+		assert(d==ii+jj+kk);	
+		{
+		   for (int k = kk*BLOCK_SIZE; k < min(k2,kk*BLOCK_SIZE+BLOCK_SIZE); k++) {
+                       for (int j = jj*BLOCK_SIZE; j < min(j2,jj*BLOCK_SIZE+BLOCK_SIZE); j++) {
+                           for (int i = ii*BLOCK_SIZE; i < min(i2,ii*BLOCK_SIZE+BLOCK_SIZE); i++) {
+                        	xx = AX(i,j,k);
+                       		xn = (i > 0)   ? AX(i-1,j,k) : 0;
+                       		xe = (j > 0)   ? AX(i,j-1,k) : 0;
+                       		xu = (k > 0)   ? AX(i,j,k-1) : 0;
+                       		AX(i,j,k) = (xx+xn+xe+xu)/6*w;
+					}
+ 		                   }
+		                }
+           		 }
 
+		}	
+         }
+ 
+	   
+    #undef AX
+
+}
+}
 void ssor_backward_sweep(int n, int i1, int i2, int j1, int j2, int k1, int k2, 
                          double* restrict Ax, double w)
 {
