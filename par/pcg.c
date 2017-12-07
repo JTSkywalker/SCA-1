@@ -11,7 +11,7 @@
 
 double dot(int n, const double* x, const double* y)
 {
-    double result = 0;
+    double result = 0;    
 #pragma omp parallel for schedule(guided) reduction(+:result) firstprivate(x,y)
     for (int i = 0; i < n; ++i)
         result += x[i]*y[i];
@@ -82,49 +82,24 @@ double pcg(int n,
 	    // scorep instrumentation code
 	    SCOREP_USER_REGION_DEFINE(forP)
 	      SCOREP_USER_REGION_BEGIN(forP, "forP", SCOREP_USER_REGION_TYPE_COMMON)
-#pragma omp parallel
-	      {
-		int id = omp_get_thread_num();
-		int nums = omp_get_num_threads();
-		int m = n / nums;
-		int istart = m*id;
-		int iend = m*(id+1);
-		if (id == nums-1) iend = n;
-		double* pi = p+istart;
-		double* zi = z+istart;
-#pragma omp for
-            for (int i=0; i < iend-istart; ++i)
-	      pi[i] = zi[i] + beta*pi[i];
-	      }
+
+	      #pragma omp parallel for
+	      for (int i=0; i< n; i++)
+		p[i] = z[i] + beta*p[i];
+	   
 	    SCOREP_USER_REGION_END(forP)
         }
         Afun(n, Adata, q, p);
         double alpha = rho/dot(n, p, q);
 	SCOREP_USER_REGION_DEFINE(forPQ)
 	  SCOREP_USER_REGION_BEGIN(forPQ, "forPQ", SCOREP_USER_REGION_TYPE_COMMON)
-	  /*#pragma omp parallel for schedule(static) firstprivate(p,q)
-	for (int i = 0; i < n; ++i) {
-	  x[i] += alpha*p[i];
-	  r[i] -= alpha*q[i];
-	  }*/
-	#pragma omp parallel
-	{
-	  int id = omp_get_thread_num();
-	  int nums = omp_get_num_threads();
-	  int m = n / nums;
-	  int istart = m*id;
-	  int iend = m*(id+1);
-	  if (id == nums-1) iend = n;
-	  double* xi = x+istart;
-	  double* ri = r+istart;
-	  double* pi = p+istart;
-	  double* qi = q+istart;
-#pragma omp for
-	  for (int i=0; i < iend-istart; i++) {
-	    xi[i] += alpha*pi[i];
-	    ri[i] -= alpha*qi[i];
+	  // It doesn't change ANYTHING! WHY ?!
+	  //	#pragma omp parallel for schedule(static) firstprivate(p,q)
+	  #pragma omp parallel for
+	  for (int i = 0; i < n; ++i) {
+	    x[i] += alpha*p[i];
+	    r[i] -= alpha*q[i];
 	  }
-	}
 	
 	SCOREP_USER_REGION_END(forPQ)
         is_converged = (rho/rho0 < rtol2);
