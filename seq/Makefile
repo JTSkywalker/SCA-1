@@ -6,10 +6,10 @@ default: cgp3d.x
 # === Code
 
 cgp3d.x: cgp3d.o pcg.o params.o timing.o
-	skin --user $(CC) -o $@ $^ $(LFLAGS) $(LIBS)
+	scorep --user $(CC) -o $@ $^ $(LFLAGS) $(LIBS)
 
 .c.o:
-	skin --user $(CC) $(CFLAGS) $(INCLUDE) -c $<
+	scorep --user $(CC) $(CFLAGS) $(INCLUDE) -c $<
 
 .PHONY: clean
 clean:
