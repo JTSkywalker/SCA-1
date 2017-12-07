@@ -6,7 +6,7 @@
 #include "timing.h"
 #include "pcg.h"
 
-#include <scorep/SCOREP_User.h>
+//#include <scorep/SCOREP_User.h>
 
 
 double dot(int n, const double* x, const double* y)
@@ -61,38 +61,46 @@ double pcg(int n,
     double rtol2 = rtol*rtol;
     int is_converged = 0;
     int step;
-
+    double t=0, time_dot=0;
 
     tic(0);
-
+    tic(1);
     /* Form residual */
     Afun(n, Adata, r, x);
+t+=toc(1);
     for (int i = 0; i < n; ++i) r[i] = b[i]-r[i];
 
     for (step = 0; step < maxit && !is_converged; ++step) {
       
         Mfun(n, Mdata, z, r);
         rho_prev = rho;
-        rho = dot(n, r, z);
-        if (step == 0) {
+        tic(2);
+	rho = dot(n, r, z);
+        time_dot+=toc(2);	
+	if (step == 0) {
             rho0 = rho;
             memcpy(p, z, n*sizeof(double));
         } else {
             double beta = rho/rho_prev;
 	    // scorep instrumentation code
-	    SCOREP_USER_REGION_DEFINE(forP)
-	      SCOREP_USER_REGION_BEGIN(forP, "forP", SCOREP_USER_REGION_TYPE_COMMON)
+//	    SCOREP_USER_REGION_DEFINE(forP)
+//	      SCOREP_USER_REGION_BEGIN(forP, "forP", SCOREP_USER_REGION_TYPE_COMMON)
 
 	      #pragma omp parallel for
 	      for (int i=0; i< n; i++)
 		p[i] = z[i] + beta*p[i];
 	   
-	    SCOREP_USER_REGION_END(forP)
+//	    SCOREP_USER_REGION_END(forP)
         }
+	tic(1);
         Afun(n, Adata, q, p);
-        double alpha = rho/dot(n, p, q);
-	SCOREP_USER_REGION_DEFINE(forPQ)
-	  SCOREP_USER_REGION_BEGIN(forPQ, "forPQ", SCOREP_USER_REGION_TYPE_COMMON)
+	t+=toc(1);
+	tic(2);
+        double alpha =dot(n, p, q);
+time_dot+=toc(2);
+alpha=rho/alpha;
+//	SCOREP_USER_REGION_DEFINE(forPQ)
+//	  SCOREP_USER_REGION_BEGIN(forPQ, "forPQ", SCOREP_USER_REGION_TYPE_COMMON)
 	  // It doesn't change ANYTHING! WHY ?!
 	  //	#pragma omp parallel for schedule(static) firstprivate(p,q)
 	  #pragma omp parallel for
@@ -101,7 +109,7 @@ double pcg(int n,
 	    r[i] -= alpha*q[i];
 	  }
 	
-	SCOREP_USER_REGION_END(forPQ)
+//	SCOREP_USER_REGION_END(forPQ)
         is_converged = (rho/rho0 < rtol2);
     }
 
@@ -112,6 +120,7 @@ double pcg(int n,
     free(q);
     free(z);
     free(r);
-
+    printf("time doing Afun=%lf\n", t);
+    printf("time doing dot products=%lf\n", time_dot);
     return rho/rho0;
 }
